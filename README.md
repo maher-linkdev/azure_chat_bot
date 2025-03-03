@@ -14,13 +14,13 @@ interact with a chatbot.
 
 #### Prerequisites
 
-GEMINI_API_KEY, Go to Google AI Studio, and create one, if you don't have one.
+AZURE CHAT BOT FRAMEWORK SDK SECRET KEY.
 
 ##### Requirements
 
 - Flutter (latest stable version)
 - Dart SDK
-- GEMINI API KEY
+- AZURE CHAT BOT FRAMEWORK SDK SECRET KEY
 
 ##### Steps
 
