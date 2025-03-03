@@ -1,12 +1,14 @@
-import 'package:azure_chat_bot/features/chat/presentation/pages/chat_page.dart';
-import 'package:azure_chat_bot/features/home/presentation/widgets/home_features_view.dart';
+import 'package:azure_chat_bot/src/feature/chat/presentation/page/chat_page.dart';
+import 'package:azure_chat_bot/src/feature/chat/presentation/provider/chat_provider.dart';
+import 'package:azure_chat_bot/src/feature/home/presentation/component/home_features_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Scaffold(
       body: Container(
@@ -69,6 +71,8 @@ class HomePage extends StatelessWidget {
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () {
+                      ref.read(chatProvider.notifier).initializeConversation();
+
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const ChatPage(),

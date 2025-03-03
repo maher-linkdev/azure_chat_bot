@@ -1,4 +1,4 @@
-import 'package:azure_chat_bot/features/home/presentation/widgets/home_feature_item.dart';
+import 'package:azure_chat_bot/src/feature/home/presentation/component/home_feature_item.dart';
 import 'package:flutter/material.dart';
 
 class HomeFeaturesView extends StatelessWidget {
