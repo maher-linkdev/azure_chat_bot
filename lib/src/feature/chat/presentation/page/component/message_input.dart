@@ -1,3 +1,5 @@
+import 'package:azure_chat_bot/src/core/providers/voice_service_provider.dart';
+import 'package:azure_chat_bot/src/core/services/voice_service.dart';
 import 'package:azure_chat_bot/src/feature/chat/presentation/provider/chat_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,10 +15,37 @@ class MessageInput extends ConsumerStatefulWidget {
 }
 
 class _MessageInputState extends ConsumerState<MessageInput> {
+  bool _isListening = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupVoiceServiceListeners();
+  }
+
+  void _setupVoiceServiceListeners() {
+    final voiceService = ref.read(voiceServiceProvider);
+
+    voiceService.voiceState.addListener(() {
+      if (mounted) {
+        setState(() {
+          _isListening = voiceService.voiceState.value == VoiceState.listening;
+        });
+      }
+    });
+
+    voiceService.recognizedText.addListener(() {
+      if (mounted && voiceService.recognizedText.value.isNotEmpty) {
+        widget.controller.text = voiceService.recognizedText.value;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatProvider.select((value) => value.chatState));
     final isLoading = chatState == ChatState.loading;
+    final voiceState = ref.watch(voiceServiceProvider).voiceState.value;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -33,11 +62,18 @@ class _MessageInputState extends ConsumerState<MessageInput> {
       child: SafeArea(
         child: Row(
           children: [
+            IconButton(
+              icon: Icon(
+                _isListening ? Icons.mic : Icons.mic_none,
+                color: _isListening ? Theme.of(context).colorScheme.primary : Colors.grey[600],
+              ),
+              onPressed: isLoading ? null : _toggleListening,
+            ),
             Expanded(
               child: TextField(
                 controller: widget.controller,
                 decoration: InputDecoration(
-                  hintText: 'Type a message...',
+                  hintText: _isListening ? 'Listening...' : 'Type a message...',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
@@ -71,8 +107,28 @@ class _MessageInputState extends ConsumerState<MessageInput> {
     );
   }
 
+  void _toggleListening() {
+    final voiceService = ref.read(voiceServiceProvider);
+
+    if (voiceService.voiceState.value == VoiceState.listening) {
+      voiceService.stopListening();
+    } else {
+      voiceService.startListening(onResult: (String text) {
+        if (text.isNotEmpty) {
+          _sendMessage();
+        }
+      });
+    }
+  }
+
   void _sendMessage() {
     if (widget.controller.text.trim().isEmpty) return;
+
+    final voiceService = ref.read(voiceServiceProvider);
+    if (voiceService.voiceState.value == VoiceState.listening) {
+      voiceService.stopListening();
+    }
+
     ref.read(chatProvider.notifier).sendMessage(widget.controller.text, widget.meUserId);
     widget.controller.clear();
   }

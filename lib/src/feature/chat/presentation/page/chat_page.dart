@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:azure_chat_bot/src/core/providers/voice_service_provider.dart';
 import 'package:azure_chat_bot/src/feature/chat/domain/entities/message.dart';
 import 'package:azure_chat_bot/src/feature/chat/presentation/page/component/chat_initial_view.dart';
 import 'package:azure_chat_bot/src/feature/chat/presentation/page/component/message_input.dart';
@@ -23,6 +24,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   WebSocketChannel? _webSocketChannel;
 
   bool _isWebSocketConnected = false;
+  bool _isTtsEnabled = true;
 
   @override
   void initState() {
@@ -49,6 +51,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 timestamp: DateTime.now(),
               );
               ref.read(chatProvider.notifier).addBotMessage(botMessage);
+
+              if (_isTtsEnabled) {
+                _speakBotMessage(botMessage.text);
+              }
             }
           }
         },
@@ -71,6 +77,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
   }
 
+  Future<void> _speakBotMessage(String message) async {
+    final voiceService = ref.read(voiceServiceProvider);
+    await voiceService.speak(message);
+  }
+
   @override
   void dispose() {
     _messageController.dispose();
@@ -83,7 +94,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final conversation = ref.read(chatConversationProvider);
     final chatState = ref.watch(chatProvider.select((value) => value.chatState));
     final messages = ref.watch(chatProvider.select((value) => value.messages));
-    final isLoading = chatState == ChatState.loading;
     if (conversation != null && _webSocketChannel == null) {
       _connectToWebSocket(conversation.streamUrl);
     }
@@ -102,11 +112,15 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     itemCount: messages.length,
                     reverse: false,
                     itemBuilder: (context, index) {
-                      return MessageItem(message: messages[index]);
+                      final message = messages[index];
+                      return MessageItem(
+                        message: message,
+                        onTap: !message.isUser ? () => _handleMessageTap(message) : null,
+                      );
                     },
                   ),
           ),
-          if (isLoading)
+          if (chatState == ChatState.loading)
             const Padding(
               padding: EdgeInsets.all(8.0),
               child: LinearProgressIndicator(),
@@ -115,5 +129,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         ],
       ),
     );
+  }
+
+  void _handleMessageTap(Message message) {
+    if (_isTtsEnabled) {
+      _speakBotMessage(message.text);
+    }
   }
 }

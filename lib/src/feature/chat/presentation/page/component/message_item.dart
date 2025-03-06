@@ -4,8 +4,13 @@ import 'package:flutter/material.dart';
 
 class MessageItem extends StatelessWidget {
   final Message message;
+  final VoidCallback? onTap;
 
-  const MessageItem({super.key, required this.message});
+  const MessageItem({
+    super.key,
+    required this.message,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,17 +23,26 @@ class MessageItem extends StatelessWidget {
           if (!message.isUser) MessageItemAvatar(isUser: message.isUser),
           const SizedBox(width: 8),
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: message.isUser ? Theme.of(context).colorScheme.primary : Colors.grey[200],
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  color: message.isUser ? Colors.white : Colors.black87,
-                  fontSize: 16,
+            child: InkWell(
+              onTap: !message.isUser ? onTap : null,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: message.isUser ? Theme.of(context).colorScheme.primary : Colors.grey[200],
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message.text,
+                      style: TextStyle(
+                        color: message.isUser ? Colors.white : Colors.black87,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
